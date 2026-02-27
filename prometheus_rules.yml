@@ -1,0 +1,38 @@
+groups:
+  - name: restaurant-ops-alerts
+    rules:
+      - alert: HighOrderLatency
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{handler="/orders", job="restaurant-system"}[1m])) by (le)) > 0.5
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High Order Latency (P95 > 500ms)"
+          description: "The 95th percentile latency for POST /orders is above 500ms."
+
+      - alert: HighErrorRate
+        expr: sum(rate(http_requests_total{status=~"5.."}[1m])) / sum(rate(http_requests_total[1m])) > 0.05
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Global 5xx Error Rate > 5%"
+          description: "System is returning too many 5xx errors."
+
+      - alert: CircuitBreakerOpen
+        expr: sum(rate(circuit_breaker_trips_total[1m])) > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Circuit Breaker Tripped"
+          description: "A circuit breaker tripped, failing downstream traffic."
+
+      - alert: PaymentGatewayFailing
+        expr: sum(rate(payment_failures_total[1m])) / (sum(rate(payment_failures_total[1m])) + sum(rate(payment_success_total[1m])) > 0) > 0.05
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Payment Gateway Failure Rate > 5%"
+          description: "Payments are failing rapidly."
