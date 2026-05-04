@@ -6,18 +6,18 @@ import { LuTriangleAlert } from 'react-icons/lu';
 
 export default function DashboardClient({ stats }) {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
         {/* Column 1 & 2: Analytics & Inventory */}
         <div className="lg:col-span-2 space-y-8">
             {/* Revenue Hero */}
-            <div className="bg-linear-to-r from-accent-gold/10 to-transparent border border-accent-gold/20 rounded-lg p-8 relative overflow-hidden">
+            <div className="bg-linear-to-r from-accent-gold/10 to-transparent border border-accent-gold/20 rounded-lg p-4 md:p-8 relative overflow-hidden">
                  <div className="absolute top-0 right-0 p-8 opacity-10">
                     <span className="text-accent-gold text-[150px] leading-none font-serif">₹</span>
                 </div>
-                <h2 className="text-accent-gold font-serif text-2xl mb-2">Total Revenue</h2>
-                <div className="flex items-baseline gap-4">
-                    <span className="text-7xl font-mono text-white font-light">
-                        <span className="text-4xl text-accent-gold mr-2">₹</span>
+                <h2 className="text-accent-gold font-serif text-xl md:text-2xl mb-2">Total Revenue</h2>
+                <div className="flex items-baseline gap-2 md:gap-4 flex-wrap">
+                    <span className="text-4xl md:text-7xl font-mono text-white font-light">
+                        <span className="text-2xl md:text-4xl text-accent-gold mr-1 md:mr-2">₹</span>
                         {stats.revenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </span>
                     <span className="flex items-center gap-1 text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded text-xs border border-emerald-500/20">

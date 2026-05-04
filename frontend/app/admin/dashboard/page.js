@@ -38,15 +38,15 @@ export default async function AdminDashboard() {
     return (
         <div className="max-w-[1920px] mx-auto text-admin-text">
             {/* Header - Server Rendered for SEO/Verification */}
-            <div className="flex justify-between items-end mb-8 border-b border-white/5 pb-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 md:mb-8 border-b border-white/5 pb-4 gap-3">
                 <div>
-                    <h1 className="text-3xl font-serif text-admin-text mb-1">Command Center</h1>
-                    <p className="text-white/40 text-sm tracking-widest uppercase">System Status: Operational</p>
+                    <h1 className="text-2xl md:text-3xl font-serif text-admin-text mb-1">Command Center</h1>
+                    <p className="text-white/40 text-xs md:text-sm tracking-widest uppercase">System Status: Operational</p>
                 </div>
                 <div className="flex gap-4">
-                    <div className="flex items-center gap-2 bg-admin-card px-4 py-2 rounded-full border border-white/10">
+                    <div className="flex items-center gap-2 bg-admin-card px-3 md:px-4 py-1.5 md:py-2 rounded-full border border-white/10">
                         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"/>
-                        <span className="text-xs text-green-400 font-mono">DB: CONNECTED</span>
+                        <span className="text-[10px] md:text-xs text-green-400 font-mono">DB: CONNECTED</span>
                     </div>
                 </div>
             </div>

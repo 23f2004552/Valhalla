@@ -73,16 +73,16 @@ export default function AdminOrdersPage() {
   return (
     <div className="max-w-[1920px] mx-auto text-admin-text">
       {/* Header */}
-      <div className="flex justify-between items-end mb-8 border-b border-white/5 pb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 md:mb-8 border-b border-white/5 pb-4 gap-3">
         <div>
-          <h1 className="text-3xl font-serif text-admin-text mb-1">Live Orders</h1>
-          <p className="text-white/40 text-sm tracking-widest uppercase">
+          <h1 className="text-2xl md:text-3xl font-serif text-admin-text mb-1">Live Orders</h1>
+          <p className="text-white/40 text-xs md:text-sm tracking-widest uppercase">
             {orders.length} total · {orders.filter((o) => o.status === "pending").length} pending
           </p>
         </div>
         <button
           onClick={() => { setLoading(true); fetchOrders(); }}
-          className="flex items-center gap-2 bg-admin-card border border-white/10 px-4 py-2 rounded-full text-xs text-white/60 hover:text-white hover:border-white/20 transition-all"
+          className="flex items-center gap-2 bg-admin-card border border-white/10 px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs text-white/60 hover:text-white hover:border-white/20 transition-all"
         >
           <LuRefreshCw className={loading ? "animate-spin" : ""} />
           Refresh

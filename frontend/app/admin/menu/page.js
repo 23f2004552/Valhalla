@@ -92,14 +92,14 @@ export default function AdminMenuPage() {
     return (
         <div className="max-w-[1920px] mx-auto min-h-screen">
             {/* Header */}
-            <div className="flex justify-between items-end mb-8 border-b border-white/5 pb-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 md:mb-8 border-b border-white/5 pb-4 gap-3">
                 <div>
-                    <h1 className="text-3xl font-serif text-white mb-1">Menu Management</h1>
-                    <p className="text-white/40 text-sm tracking-widest uppercase">The Collection</p>
+                    <h1 className="text-2xl md:text-3xl font-serif text-white mb-1">Menu Management</h1>
+                    <p className="text-white/40 text-xs md:text-sm tracking-widest uppercase">The Collection</p>
                 </div>
                 <button 
                     onClick={() => { setEditItem(null); setIsAddModalOpen(true); }}
-                    className="bg-accent-gold/10 border border-accent-gold/30 text-accent-gold px-4 py-2 rounded text-sm hover:bg-accent-gold/20 transition-all font-mono uppercase tracking-widest"
+                    className="bg-accent-gold/10 border border-accent-gold/30 text-accent-gold px-3 md:px-4 py-2 rounded text-xs md:text-sm hover:bg-accent-gold/20 transition-all font-mono uppercase tracking-widest"
                 >
                     + Add Dish
                 </button>
