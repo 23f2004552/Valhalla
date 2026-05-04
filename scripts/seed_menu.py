@@ -2,7 +2,7 @@ import requests
 import json
 import sys
 
-API_URL = "http://localhost:8080/api"
+API_URL = "http://localhost:3000/api"
 
 MENU_DATA = {
     "Starters": [

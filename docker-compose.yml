@@ -7,7 +7,31 @@ services:
     container_name: rms-frontend
     ports:
       - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8080/api
     restart: unless-stopped
+    depends_on:
+      gateway:
+        condition: service_started
+
+  gateway:
+    image: nginx:latest
+    container_name: rms-gateway
+    ports:
+      - "8080:80"
+    volumes:
+      - ./gateway/nginx.conf.template:/etc/nginx/nginx.conf.template
+      - ./gateway/docker-entrypoint.sh:/docker-entrypoint.d/40-envsubst-custom.sh
+    environment:
+      - FRONTEND_ORIGIN=${FRONTEND_ORIGIN:-http://localhost:3007}
+    restart: unless-stopped
+    depends_on:
+      - auth-service
+      - order-service
+      - menu-service
+      - inventory-service
+      - payment-service
+      - analytics-service
 
   # Auth Service
   auth-service:
@@ -15,8 +39,6 @@ services:
     container_name: rms-auth
     expose:
       - "5000"
-    ports:
-      - "5001:5000"
     restart: unless-stopped
     volumes:
       - ./scripts:/app/scripts
@@ -30,14 +52,74 @@ services:
       DB_USER: postgres
       DB_PASSWORD: password
 
+  # Order Service
+  order-service:
+    build: ./order-service
+    container_name: rms-order
+    expose:
+      - "5000"
+    restart: unless-stopped
+    volumes:
+      - ./scripts:/app/scripts
+    command: sh -c "python /app/scripts/wait_for_db.py && uvicorn main:app --host 0.0.0.0 --port 5000"
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'python -c "import urllib.request; urllib.request.urlopen(''http://localhost:5000/'')" || exit 1',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    environment:
+      DB_HOST: db
+      DB_NAME: orderdb
+      DB_USER: postgres
+      DB_PASSWORD: password
+      SERVICE_TOKEN: ${SERVICE_TOKEN}
+
   # Menu Service
   menu-service:
     build: ./menu-service
     container_name: rms-menu
     expose:
       - "5000"
-    ports:
-      - "5002:5000"
+    restart: unless-stopped
+    volumes:
+      - ./scripts:/app/scripts
+    command: sh -c "python /app/scripts/wait_for_db.py && uvicorn main:app --host 0.0.0.0 --port 5000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'python -c "import urllib.request; urllib.request.urlopen(''http://localhost:5000/'')" || exit 1',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    environment:
+      DB_HOST: db
+      DB_NAME: menudb
+      DB_USER: postgres
+      DB_PASSWORD: password
+      REDIS_HOST: redis
+
+  # Inventory Service
+  inventory-service:
+    build: ./inventory-service
+    container_name: rms-inventory
+    expose:
+      - "5000"
     restart: unless-stopped
     volumes:
       - ./scripts:/app/scripts
@@ -56,9 +138,70 @@ services:
       retries: 3
     environment:
       DB_HOST: db
-      DB_NAME: menudb
+      DB_NAME: inventorydb
       DB_USER: postgres
       DB_PASSWORD: password
+      SERVICE_TOKEN: ${SERVICE_TOKEN}
+
+  # Payment Service
+  payment-service:
+    build: ./payment-service
+    container_name: rms-payment
+    expose:
+      - "5000"
+    restart: unless-stopped
+    volumes:
+      - ./scripts:/app/scripts
+    command: sh -c "python /app/scripts/wait_for_db.py && uvicorn main:app --host 0.0.0.0 --port 5000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'python -c "import urllib.request; urllib.request.urlopen(''http://localhost:5000/'')" || exit 1',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    environment:
+      DB_HOST: db
+      DB_NAME: paymentdb
+      DB_USER: postgres
+      DB_PASSWORD: password
+      SERVICE_TOKEN: ${SERVICE_TOKEN}
+
+  # Analytics Service
+  analytics-service:
+    build: ./analytics-service
+    container_name: rms-analytics
+    expose:
+      - "5000"
+    restart: unless-stopped
+    volumes:
+      - ./scripts:/app/scripts
+    command: sh -c "python /app/scripts/wait_for_db.py && uvicorn main:app --host 0.0.0.0 --port 5000"
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'python -c ''import urllib.request; urllib.request.urlopen("http://localhost:5000/")'' || exit 1',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    environment:
+      DB_HOST: db
+      DB_NAME: analyticsdb
+      DB_USER: postgres
+      DB_PASSWORD: password
+      SERVICE_TOKEN: "supersecretinternalservicetoken"
 
   # Database (internal only — no host port exposure)
   db:
@@ -70,8 +213,6 @@ services:
       POSTGRES_PASSWORD: password
     expose:
       - "5432"
-    ports:
-      - "5432:5432"
     volumes:
       - ./scripts/platform_init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
@@ -79,3 +220,52 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  # Redis (internal only — no host port exposure)
+  redis:
+    image: redis:alpine
+    container_name: rms-redis
+    restart: unless-stopped
+    expose:
+      - "6379"
+
+  # RabbitMQ (internal only — no host port exposure)
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rms-rabbitmq
+    restart: unless-stopped
+    expose:
+      - "5672"
+      - "15672"
+
+  # Jaeger Distributed Tracing
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: rms-jaeger
+    restart: unless-stopped
+    ports:
+      - "16686:16686"
+      - "4318:4318"
+      - "4317:4317"
+
+  # Prometheus Metrics
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: rms-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus_rules.yml:/etc/prometheus/prometheus_rules.yml
+    ports:
+      - "9090:9090"
+
+  # Grafana Dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: rms-grafana
+    restart: unless-stopped
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+    ports:
+      - "3001:3000"

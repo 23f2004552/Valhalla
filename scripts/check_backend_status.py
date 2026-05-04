@@ -2,11 +2,11 @@ import requests
 import sys
 
 SERVICES = {
-    "Auth": "http://localhost:8080/api/auth/",
-    "Menu": "http://localhost:8080/api/menu",
-    "Categories": "http://localhost:8080/api/categories",
-    "Inventory": "http://localhost:8080/api/inventory",
-    "Analytics": "http://localhost:8080/api/analytics/daily-sales",
+    "Auth": "http://localhost:3000/api/auth/",
+    "Menu": "http://localhost:3000/api/menu",
+    "Categories": "http://localhost:3000/api/menu/categories",
+    "Inventory": "http://localhost:3000/api/inventory",
+    "Analytics": "http://localhost:3000/api/analytics/daily-sales",
 }
 
 

@@ -4,6 +4,10 @@
 -- 1. Create Databases
 CREATE DATABASE menudb;
 CREATE DATABASE authdb;
+CREATE DATABASE inventorydb;
+CREATE DATABASE orderdb;
+CREATE DATABASE paymentdb;
+CREATE DATABASE analyticsdb;
 
 -- 2. Initialize Menu Service (menudb)
 \c menudb;

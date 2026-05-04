@@ -30,8 +30,17 @@ from prometheus_fastapi_instrumentator import Instrumentator
 Instrumentator().instrument(app).expose(app)
 
 
-# Removed Redis since we don't have it anymore
-cache = None
+# Redis Cache
+import redis
+REDIS_HOST = os.getenv("REDIS_HOST", None)
+try:
+    cache = redis.Redis(host=REDIS_HOST, port=6379, decode_responses=True) if REDIS_HOST else None
+    if cache:
+        cache.ping()
+        log.info("redis_connected", host=REDIS_HOST)
+except Exception as e:
+    log.info("redis_unavailable", error=str(e))
+    cache = None
 
 # Category Endpoints
 

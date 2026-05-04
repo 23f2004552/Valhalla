@@ -3,7 +3,7 @@ import json
 import sys
 import os
 
-API_URL = "http://localhost:8080/api"
+API_URL = "http://localhost:3000/api"
 
 # Ingredient Data: Name, Stock, Threshold
 INGREDIENTS = [
