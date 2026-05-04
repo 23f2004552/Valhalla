@@ -39,9 +39,11 @@ function getTargetUrl(slug) {
     return null;
 }
 
-async function handleProxy(req, { params }) {
+async function handleProxy(req, context) {
     try {
-        const slug = params.slug;
+        const { params } = context;
+        const resolvedParams = await params;
+        const slug = resolvedParams.slug;
         const targetUrl = getTargetUrl(slug);
         
         if (!targetUrl) {
@@ -74,7 +76,10 @@ async function handleProxy(req, { params }) {
         // Prepare response headers
         const responseHeaders = new Headers();
         response.headers.forEach((value, key) => {
-            responseHeaders.set(key, value);
+            const lowerKey = key.toLowerCase();
+            if (lowerKey !== 'content-encoding' && lowerKey !== 'content-length' && lowerKey !== 'transfer-encoding') {
+                responseHeaders.set(key, value);
+            }
         });
 
         // Get the response text
