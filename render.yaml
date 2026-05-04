@@ -9,14 +9,10 @@ envVarGroups:
         generateValue: true
 
 services:
-  # ── Backend Microservices ──
-  # Each service builds from its own subdirectory and gets its own public URL.
-
   - type: web
     name: valhalla-auth
     env: docker
     dockerfilePath: ./auth-service/Dockerfile
-    dockerContext: ./auth-service
     plan: free
     envVars:
       - key: DATABASE_URL
@@ -29,7 +25,6 @@ services:
     name: valhalla-menu
     env: docker
     dockerfilePath: ./menu-service/Dockerfile
-    dockerContext: ./menu-service
     plan: free
     envVars:
       - key: DATABASE_URL
@@ -42,7 +37,6 @@ services:
     name: valhalla-order
     env: docker
     dockerfilePath: ./order-service/Dockerfile
-    dockerContext: ./order-service
     plan: free
     envVars:
       - key: DATABASE_URL
@@ -57,7 +51,6 @@ services:
     name: valhalla-inventory
     env: docker
     dockerfilePath: ./inventory-service/Dockerfile
-    dockerContext: ./inventory-service
     plan: free
     envVars:
       - key: DATABASE_URL
@@ -70,7 +63,6 @@ services:
     name: valhalla-payment
     env: docker
     dockerfilePath: ./payment-service/Dockerfile
-    dockerContext: ./payment-service
     plan: free
     envVars:
       - key: DATABASE_URL
@@ -83,7 +75,6 @@ services:
     name: valhalla-analytics
     env: docker
     dockerfilePath: ./analytics-service/Dockerfile
-    dockerContext: ./analytics-service
     plan: free
     envVars:
       - key: DATABASE_URL
@@ -94,14 +85,10 @@ services:
         value: "disabled"
       - fromGroup: valhalla-shared
 
-  # ── Frontend (Next.js) ──
-  # The frontend proxies API calls to each backend service via Next.js rewrites.
-  # After deploying, set the *_SERVICE_URL env vars to the actual Render URLs.
   - type: web
     name: valhalla-frontend
     env: docker
     dockerfilePath: ./frontend/Dockerfile
-    dockerContext: ./frontend
     plan: free
     envVars:
       - fromGroup: valhalla-shared
