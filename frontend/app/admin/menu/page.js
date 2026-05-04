@@ -6,7 +6,7 @@ export default function AdminMenuPage() {
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [newItem, setNewItem] = useState({ name: '', description: '', price: '', category_id: '' });
+    const [newItem, setNewItem] = useState({ name: '', description: '', price: '', category_id: '', image_url: '' });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const fetchMenu = async () => {
@@ -33,10 +33,11 @@ export default function AdminMenuPage() {
                 description: newItem.description,
                 price: parseFloat(newItem.price),
                 category_id: newItem.category_id ? parseInt(newItem.category_id) : null,
+                image_url: newItem.image_url || null,
                 is_available: true
             });
             setIsAddModalOpen(false);
-            setNewItem({ name: '', description: '', price: '', category_id: '' });
+            setNewItem({ name: '', description: '', price: '', category_id: '', image_url: '' });
             fetchMenu(); // Refresh the list
         } catch (err) {
             console.error("Failed to add dish:", err);
@@ -122,6 +123,16 @@ export default function AdminMenuPage() {
                                     value={newItem.description}
                                     onChange={e => setNewItem({...newItem, description: e.target.value})}
                                     className="w-full bg-black/20 border border-white/10 rounded p-3 text-white focus:border-accent-gold/50 outline-none transition-colors h-24"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs uppercase tracking-widest text-white/40 mb-2">Image URL (Optional)</label>
+                                <input 
+                                    type="url" 
+                                    placeholder="https://example.com/image.jpg"
+                                    value={newItem.image_url}
+                                    onChange={e => setNewItem({...newItem, image_url: e.target.value})}
+                                    className="w-full bg-black/20 border border-white/10 rounded p-3 text-white focus:border-accent-gold/50 outline-none transition-colors text-sm"
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
