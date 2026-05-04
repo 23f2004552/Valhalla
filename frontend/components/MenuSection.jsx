@@ -89,13 +89,15 @@ export default function MenuSection({ title, items }) {
               >
                 {/* Image — compact 16:10 landscape */}
                 <div className="relative w-full aspect-[16/10] overflow-hidden">
-                  <Image
+                  <img
                     src={getImage(item)}
                     alt={item.name}
-                    fill
-                    className={`object-cover transition-transform duration-700 ease-out group-hover:scale-110 ${
+                    className={`absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110 ${
                       isSoldOut ? "grayscale opacity-40" : ""
                     }`}
+                    onError={(e) => {
+                      e.target.src = "/images/dish_default.jpg";
+                    }}
                   />
 
                   {/* Subtle gradient at bottom for text readability */}
