@@ -47,7 +47,8 @@ export default function Home() {
         const res = await fetch(`${API_URL}/menu`);
         if (!res.ok) throw new Error("Menu unavailable");
         const items = await res.json();
-        setFeaturedItems(items.slice(0, 3));
+        const availableItems = Array.isArray(items) ? items.filter(item => item.is_available !== false) : [];
+        setFeaturedItems(availableItems.slice(0, 3));
       } catch {
         setFeaturedItems(MOCK_MENU);
       } finally {

@@ -24,7 +24,8 @@ export default function MenuPage() {
           fetch(`${API_URL}/menu/categories`).then((r) => r.json()).catch(() => []),
           fetch(`${API_URL}/inventory`).then((r) => r.json()).catch(() => []),
         ]);
-        setItems(Array.isArray(menuRes) ? menuRes : []);
+        const availableMenuRes = Array.isArray(menuRes) ? menuRes.filter(item => item.is_available !== false) : [];
+        setItems(availableMenuRes);
         setCategories(Array.isArray(catRes) ? catRes : []);
         setInventory(Array.isArray(invRes) ? invRes : []);
       } catch (err) {
