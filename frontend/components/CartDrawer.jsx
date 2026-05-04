@@ -17,12 +17,16 @@ export default function CartDrawer() {
     updateQuantity,
     cartTotal,
     clearCart,
+    activeOrderId,
+    setActiveOrderId,
+    clearActiveOrder
   } = useCart();
 
   const [status, setStatus] = useState("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [selectedTable, setSelectedTable] = useState(null);
   const [customerName, setCustomerName] = useState("");
+  const [activeOrderDetails, setActiveOrderDetails] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -33,6 +37,29 @@ export default function CartDrawer() {
     }
     return () => document.body.classList.remove("cart-open");
   }, [isCartOpen]);
+
+  useEffect(() => {
+    if (!activeOrderId || !isCartOpen) return;
+
+    const fetchOrderStatus = async () => {
+      try {
+        const res = await fetch(`${API_URL}/orders/${activeOrderId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setActiveOrderDetails(data);
+          // If cancelled or completed, maybe clear it after a delay, but let's just keep it so they can see it's done.
+        } else if (res.status === 404) {
+          clearActiveOrder();
+        }
+      } catch (e) {
+        console.error("Failed to fetch order status", e);
+      }
+    };
+
+    fetchOrderStatus();
+    const interval = setInterval(fetchOrderStatus, 5000); // Poll every 5s
+    return () => clearInterval(interval);
+  }, [activeOrderId, isCartOpen, clearActiveOrder]);
 
   const handleCheckout = async () => {
     if (!selectedTable) {
@@ -66,11 +93,11 @@ export default function CartDrawer() {
 
       const orderData = await res.json();
       clearCart();
-      setIsCartOpen(false);
+      setActiveOrderId(orderData.id);
       setStatus("idle");
       setSelectedTable(null);
       setCustomerName("");
-      alert(`Order #${orderData.id} placed for Table ${orderData.table_number}!`);
+      // Removed the alert to provide a smoother transition to the tracking view
     } catch (error) {
       setStatus("error");
       setErrorMessage(error.message || "Failed to place order.");
@@ -102,7 +129,9 @@ export default function CartDrawer() {
       >
         {/* Header */}
         <div className="flex justify-between items-center mb-6 pb-4 border-b border-white/5">
-          <h2 className="text-2xl font-serif text-accent-gold">Your Selection</h2>
+          <h2 className="text-2xl font-serif text-accent-gold">
+            {cartItems.length === 0 && activeOrderDetails ? "Live Tracking" : "Your Selection"}
+          </h2>
           <button
             onClick={() => setIsCartOpen(false)}
             className="text-white/50 hover:text-white transition-colors w-11 h-11 flex items-center justify-center"
@@ -112,16 +141,63 @@ export default function CartDrawer() {
         </div>
 
         {cartItems.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-center opacity-50">
-            <p className="text-white/50 font-serif italic text-lg">Your plate is empty.</p>
-            <button
-              onClick={() => setIsCartOpen(false)}
-              className="mt-4 text-xs uppercase tracking-widest text-accent-gold border-b border-accent-gold"
-              style={{ minHeight: 44 }}
-            >
-              Return to Menu
-            </button>
-          </div>
+          activeOrderDetails ? (
+            <div className="flex-1 flex flex-col pt-4">
+              <div className="text-center mb-8">
+                <div className="text-xs text-white/40 uppercase tracking-[0.3em] mb-2">Order #{activeOrderDetails.id}</div>
+                <div className="text-4xl font-serif text-white capitalize mb-4">{activeOrderDetails.status}</div>
+                <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden flex">
+                  <div className={`h-full transition-all duration-1000 ${
+                    activeOrderDetails.status === 'pending' ? 'w-1/3 bg-yellow-400' :
+                    activeOrderDetails.status === 'preparing' ? 'w-2/3 bg-blue-400' :
+                    activeOrderDetails.status === 'ready' ? 'w-full bg-green-400' :
+                    activeOrderDetails.status === 'completed' ? 'w-full bg-white/40' :
+                    'w-full bg-red-400'
+                  }`} />
+                </div>
+              </div>
+              
+              <div className="bg-white/5 rounded-lg p-5 border border-white/10 mb-6">
+                <div className="flex justify-between text-sm mb-2 text-white/60">
+                  <span>Guest</span>
+                  <span className="text-white">{activeOrderDetails.customer_name || 'Guest'}</span>
+                </div>
+                <div className="flex justify-between text-sm text-white/60">
+                  <span>Table</span>
+                  <span className="text-accent-gold">Table {activeOrderDetails.table_number}</span>
+                </div>
+              </div>
+
+              <div className="mt-auto">
+                {activeOrderDetails.status === 'completed' || activeOrderDetails.status === 'cancelled' ? (
+                  <button
+                    onClick={() => {
+                      clearActiveOrder();
+                      setIsCartOpen(false);
+                    }}
+                    className="w-full bg-white/10 text-white py-4 font-serif text-lg hover:bg-white/20 transition-colors duration-300"
+                  >
+                    Close Tracker
+                  </button>
+                ) : (
+                  <p className="text-center text-xs text-white/30 uppercase tracking-widest">
+                    Updating live...
+                  </p>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center text-center opacity-50">
+              <p className="text-white/50 font-serif italic text-lg">Your plate is empty.</p>
+              <button
+                onClick={() => setIsCartOpen(false)}
+                className="mt-4 text-xs uppercase tracking-widest text-accent-gold border-b border-accent-gold"
+                style={{ minHeight: 44 }}
+              >
+                Return to Menu
+              </button>
+            </div>
+          )
         ) : (
           <>
             {/* Items */}

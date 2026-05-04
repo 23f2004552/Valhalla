@@ -32,20 +32,35 @@ export function CartProvider({ children }) {
     }
     return [];
   });
+  const [activeOrderId, setActiveOrderId] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem("rms_active_order") || null;
+    }
+    return null;
+  });
+
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHydrated(true);
   }, []);
 
-  // Persist cart to localStorage on every change (after hydration)
   useEffect(() => {
     if (hydrated) {
       saveCartToStorage(cartItems);
     }
   }, [cartItems, hydrated]);
+
+  useEffect(() => {
+    if (hydrated) {
+      if (activeOrderId) {
+        localStorage.setItem("rms_active_order", activeOrderId);
+      } else {
+        localStorage.removeItem("rms_active_order");
+      }
+    }
+  }, [activeOrderId, hydrated]);
 
   const addToCart = useCallback((item) => {
     setCartItems(prev => {
@@ -74,10 +89,13 @@ export function CartProvider({ children }) {
 
   const clearCart = useCallback(() => {
     setCartItems([]);
-    // Also clear localStorage explicitly on successful order
     if (typeof window !== 'undefined') {
       localStorage.removeItem(CART_STORAGE_KEY);
     }
+  }, []);
+
+  const clearActiveOrder = useCallback(() => {
+    setActiveOrderId(null);
   }, []);
 
   const cartTotal = useMemo(() => {
@@ -98,7 +116,10 @@ export function CartProvider({ children }) {
       isCartOpen,
       setIsCartOpen,
       cartTotal,
-      cartCount
+      cartCount,
+      activeOrderId,
+      setActiveOrderId,
+      clearActiveOrder
     }}>
       {children}
     </CartContext.Provider>
