@@ -92,6 +92,7 @@ export default function MenuSection({ title, items }) {
                   <img
                     src={getImage(item)}
                     alt={item.name}
+                    referrerPolicy="no-referrer"
                     className={`absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110 ${
                       isSoldOut ? "grayscale opacity-40" : ""
                     }`}
