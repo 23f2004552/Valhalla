@@ -1,0 +1,125 @@
+services:
+  # 1. PostgreSQL Database (Shared by all services)
+  - type: database
+    name: valhalla-db
+    plan: free
+
+  # 2. Redis Cache
+  - type: redis
+    name: valhalla-redis
+    plan: free
+    ipAllowList: [] # Only allow internal access
+
+  # 3. Microservices (Backend)
+  - type: web
+    name: valhalla-auth
+    env: docker
+    dockerContext: .
+    dockerfilePath: auth-service/Dockerfile
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: valhalla-db
+          property: connectionString
+      - key: SERVICE_TOKEN
+        generateValue: true
+
+  - type: web
+    name: valhalla-menu
+    env: docker
+    dockerContext: .
+    dockerfilePath: menu-service/Dockerfile
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: valhalla-db
+          property: connectionString
+      - key: REDIS_HOST
+        fromRedis:
+          name: valhalla-redis
+          property: host
+
+  - type: web
+    name: valhalla-order
+    env: docker
+    dockerContext: .
+    dockerfilePath: order-service/Dockerfile
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: valhalla-db
+          property: connectionString
+      - key: RABBITMQ_HOST
+        sync: false # Set this manually to your CloudAMQP URL in Render Dashboard
+      - key: SERVICE_TOKEN
+        fromService:
+          type: web
+          name: valhalla-auth
+          envVar: SERVICE_TOKEN
+
+  - type: web
+    name: valhalla-inventory
+    env: docker
+    dockerContext: .
+    dockerfilePath: inventory-service/Dockerfile
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: valhalla-db
+          property: connectionString
+
+  - type: web
+    name: valhalla-payment
+    env: docker
+    dockerContext: .
+    dockerfilePath: payment-service/Dockerfile
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: valhalla-db
+          property: connectionString
+
+  - type: web
+    name: valhalla-analytics
+    env: docker
+    dockerContext: .
+    dockerfilePath: analytics-service/Dockerfile
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: valhalla-db
+          property: connectionString
+      - key: RABBITMQ_HOST
+        sync: false # Set this manually to your CloudAMQP URL
+
+  # 4. API Gateway (Nginx)
+  - type: web
+    name: valhalla-gateway
+    env: docker
+    dockerContext: .
+    dockerfilePath: gateway/Dockerfile
+    plan: free
+    envVars:
+      - key: FRONTEND_ORIGIN
+        value: https://valhalla-suite.onrender.com # Change this after frontend is deployed
+    # Note: We will need to update the nginx.conf to use Render's internal hostnames
+
+  # 5. Frontend (Next.js)
+  - type: web
+    name: valhalla-frontend
+    env: docker
+    dockerContext: .
+    dockerfilePath: frontend/Dockerfile
+    plan: free
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: valhalla-gateway
+          property: host
