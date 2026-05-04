@@ -7,26 +7,16 @@ envVarGroups:
     envVars:
       - key: SERVICE_TOKEN
         generateValue: true
-      - key: FRONTEND_ORIGIN
-        value: https://valhalla-suite.onrender.com
-      - key: RABBITMQ_HOST
-        value: "replace-with-your-cloudamqp-hostname"
-      - key: REDIS_HOST
-        value: valhalla-redis
 
 services:
-  # 1. Redis Cache
-  - type: redis
-    name: valhalla-redis
-    plan: free
-    ipAllowList: []
+  # ── Backend Microservices ──
+  # Each service builds from its own subdirectory and gets its own public URL.
 
-  # 2. Microservices
   - type: web
     name: valhalla-auth
     env: docker
-    dockerContext: .
-    dockerfilePath: auth-service/Dockerfile
+    dockerfilePath: ./auth-service/Dockerfile
+    dockerContext: ./auth-service
     plan: free
     envVars:
       - key: DATABASE_URL
@@ -38,8 +28,8 @@ services:
   - type: web
     name: valhalla-menu
     env: docker
-    dockerContext: .
-    dockerfilePath: menu-service/Dockerfile
+    dockerfilePath: ./menu-service/Dockerfile
+    dockerContext: ./menu-service
     plan: free
     envVars:
       - key: DATABASE_URL
@@ -51,21 +41,23 @@ services:
   - type: web
     name: valhalla-order
     env: docker
-    dockerContext: .
-    dockerfilePath: order-service/Dockerfile
+    dockerfilePath: ./order-service/Dockerfile
+    dockerContext: ./order-service
     plan: free
     envVars:
       - key: DATABASE_URL
         fromDatabase:
           name: valhalla-db
           property: connectionString
+      - key: RABBITMQ_HOST
+        value: "disabled"
       - fromGroup: valhalla-shared
 
   - type: web
     name: valhalla-inventory
     env: docker
-    dockerContext: .
-    dockerfilePath: inventory-service/Dockerfile
+    dockerfilePath: ./inventory-service/Dockerfile
+    dockerContext: ./inventory-service
     plan: free
     envVars:
       - key: DATABASE_URL
@@ -77,8 +69,8 @@ services:
   - type: web
     name: valhalla-payment
     env: docker
-    dockerContext: .
-    dockerfilePath: payment-service/Dockerfile
+    dockerfilePath: ./payment-service/Dockerfile
+    dockerContext: ./payment-service
     plan: free
     envVars:
       - key: DATABASE_URL
@@ -90,34 +82,38 @@ services:
   - type: web
     name: valhalla-analytics
     env: docker
-    dockerContext: .
-    dockerfilePath: analytics-service/Dockerfile
+    dockerfilePath: ./analytics-service/Dockerfile
+    dockerContext: ./analytics-service
     plan: free
     envVars:
       - key: DATABASE_URL
         fromDatabase:
           name: valhalla-db
           property: connectionString
+      - key: RABBITMQ_HOST
+        value: "disabled"
       - fromGroup: valhalla-shared
 
-  # 3. API Gateway (Nginx)
-  - type: web
-    name: valhalla-gateway
-    env: docker
-    dockerContext: .
-    dockerfilePath: gateway/Dockerfile
-    plan: free
-    envVars:
-      - fromGroup: valhalla-shared
-
-  # 4. Frontend (Next.js)
+  # ── Frontend (Next.js) ──
+  # The frontend proxies API calls to each backend service via Next.js rewrites.
+  # After deploying, set the *_SERVICE_URL env vars to the actual Render URLs.
   - type: web
     name: valhalla-frontend
     env: docker
-    dockerContext: .
-    dockerfilePath: frontend/Dockerfile
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: ./frontend
     plan: free
     envVars:
       - fromGroup: valhalla-shared
-      - key: NEXT_PUBLIC_API_URL
-        value: https://valhalla-gateway.onrender.com/api
+      - key: AUTH_SERVICE_URL
+        value: https://valhalla-auth.onrender.com
+      - key: MENU_SERVICE_URL
+        value: https://valhalla-menu.onrender.com
+      - key: ORDER_SERVICE_URL
+        value: https://valhalla-order.onrender.com
+      - key: INVENTORY_SERVICE_URL
+        value: https://valhalla-inventory.onrender.com
+      - key: PAYMENT_SERVICE_URL
+        value: https://valhalla-payment.onrender.com
+      - key: ANALYTICS_SERVICE_URL
+        value: https://valhalla-analytics.onrender.com
