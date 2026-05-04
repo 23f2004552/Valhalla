@@ -5,6 +5,9 @@ import api from '../../../lib/api';
 export default function AdminMenuPage() {
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [newItem, setNewItem] = useState({ name: '', description: '', price: '', category_id: '' });
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const fetchMenu = async () => {
         try {
@@ -21,6 +24,28 @@ export default function AdminMenuPage() {
         fetchMenu();
     }, []);
 
+    const handleAddDish = async (e) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        try {
+            await api.post('/menu', {
+                name: newItem.name,
+                description: newItem.description,
+                price: parseFloat(newItem.price),
+                category_id: newItem.category_id ? parseInt(newItem.category_id) : null,
+                is_available: true
+            });
+            setIsAddModalOpen(false);
+            setNewItem({ name: '', description: '', price: '', category_id: '' });
+            fetchMenu(); // Refresh the list
+        } catch (err) {
+            console.error("Failed to add dish:", err);
+            alert("Failed to add dish");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     return (
         <div className="max-w-[1920px] mx-auto min-h-screen">
             {/* Header */}
@@ -29,7 +54,10 @@ export default function AdminMenuPage() {
                     <h1 className="text-3xl font-serif text-white mb-1">Menu Management</h1>
                     <p className="text-white/40 text-sm tracking-widest uppercase">The Collection</p>
                 </div>
-                <button className="bg-accent-gold/10 border border-accent-gold/30 text-accent-gold px-4 py-2 rounded text-sm hover:bg-accent-gold/20 transition-all font-mono uppercase tracking-widest">
+                <button 
+                    onClick={() => setIsAddModalOpen(true)}
+                    className="bg-accent-gold/10 border border-accent-gold/30 text-accent-gold px-4 py-2 rounded text-sm hover:bg-accent-gold/20 transition-all font-mono uppercase tracking-widest"
+                >
                     + Add Dish
                 </button>
             </div>
@@ -71,6 +99,74 @@ export default function AdminMenuPage() {
                     )}
                 </div>
             </div>
+
+            {/* Add Dish Modal */}
+            {isAddModalOpen && (
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+                    <div className="bg-admin-card border border-white/10 p-8 rounded-lg max-w-md w-full">
+                        <h2 className="text-xl font-serif text-accent-gold mb-6">Add New Dish</h2>
+                        <form onSubmit={handleAddDish} className="space-y-4">
+                            <div>
+                                <label className="block text-xs uppercase tracking-widest text-white/40 mb-2">Name</label>
+                                <input 
+                                    type="text" 
+                                    required 
+                                    value={newItem.name}
+                                    onChange={e => setNewItem({...newItem, name: e.target.value})}
+                                    className="w-full bg-black/20 border border-white/10 rounded p-3 text-white focus:border-accent-gold/50 outline-none transition-colors"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs uppercase tracking-widest text-white/40 mb-2">Description</label>
+                                <textarea 
+                                    value={newItem.description}
+                                    onChange={e => setNewItem({...newItem, description: e.target.value})}
+                                    className="w-full bg-black/20 border border-white/10 rounded p-3 text-white focus:border-accent-gold/50 outline-none transition-colors h-24"
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs uppercase tracking-widest text-white/40 mb-2">Price (₹)</label>
+                                    <input 
+                                        type="number" 
+                                        required 
+                                        min="0"
+                                        value={newItem.price}
+                                        onChange={e => setNewItem({...newItem, price: e.target.value})}
+                                        className="w-full bg-black/20 border border-white/10 rounded p-3 text-white focus:border-accent-gold/50 outline-none transition-colors"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs uppercase tracking-widest text-white/40 mb-2">Category ID</label>
+                                    <input 
+                                        type="number" 
+                                        min="1"
+                                        value={newItem.category_id}
+                                        onChange={e => setNewItem({...newItem, category_id: e.target.value})}
+                                        className="w-full bg-black/20 border border-white/10 rounded p-3 text-white focus:border-accent-gold/50 outline-none transition-colors"
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex gap-4 mt-8 pt-4 border-t border-white/10">
+                                <button 
+                                    type="button" 
+                                    onClick={() => setIsAddModalOpen(false)}
+                                    className="flex-1 py-3 text-sm text-white/40 hover:text-white transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    type="submit" 
+                                    disabled={isSubmitting}
+                                    className="flex-1 py-3 text-sm bg-accent-gold text-black rounded font-medium hover:bg-accent-gold/80 transition-colors disabled:opacity-50"
+                                >
+                                    {isSubmitting ? 'Saving...' : 'Save Dish'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
