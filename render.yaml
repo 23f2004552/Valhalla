@@ -2,6 +2,16 @@ databases:
   - name: valhalla-db
     plan: free
 
+envVarGroups:
+  - name: valhalla-shared
+    envVars:
+      - key: SERVICE_TOKEN
+        generateValue: true
+      - key: FRONTEND_ORIGIN
+        value: https://valhalla-suite.onrender.com
+      - key: RABBITMQ_HOST
+        value: "replace-with-your-cloudamqp-hostname"
+
 services:
   # 1. Redis Cache
   - type: redis
@@ -9,7 +19,7 @@ services:
     plan: free
     ipAllowList: []
 
-  # 2. Microservices (Backend)
+  # 2. Microservices
   - type: web
     name: valhalla-auth
     env: docker
@@ -21,10 +31,7 @@ services:
         fromDatabase:
           name: valhalla-db
           property: connectionString
-      - key: DB_NAME
-        value: postgres
-      - key: SERVICE_TOKEN
-        generateValue: true
+      - fromGroup: valhalla-shared
 
   - type: web
     name: valhalla-menu
@@ -41,6 +48,7 @@ services:
         fromRedis:
           name: valhalla-redis
           property: host
+      - fromGroup: valhalla-shared
 
   - type: web
     name: valhalla-order
@@ -53,13 +61,7 @@ services:
         fromDatabase:
           name: valhalla-db
           property: connectionString
-      - key: RABBITMQ_HOST
-        sync: false
-      - key: SERVICE_TOKEN
-        fromService:
-          type: web
-          name: valhalla-auth
-          envVar: SERVICE_TOKEN
+      - fromGroup: valhalla-shared
 
   - type: web
     name: valhalla-inventory
@@ -72,6 +74,7 @@ services:
         fromDatabase:
           name: valhalla-db
           property: connectionString
+      - fromGroup: valhalla-shared
 
   - type: web
     name: valhalla-payment
@@ -84,6 +87,7 @@ services:
         fromDatabase:
           name: valhalla-db
           property: connectionString
+      - fromGroup: valhalla-shared
 
   - type: web
     name: valhalla-analytics
@@ -96,8 +100,7 @@ services:
         fromDatabase:
           name: valhalla-db
           property: connectionString
-      - key: RABBITMQ_HOST
-        sync: false
+      - fromGroup: valhalla-shared
 
   # 3. API Gateway (Nginx)
   - type: web
@@ -107,8 +110,7 @@ services:
     dockerfilePath: gateway/Dockerfile
     plan: free
     envVars:
-      - key: FRONTEND_ORIGIN
-        value: https://valhalla-suite.onrender.com
+      - fromGroup: valhalla-shared
 
   # 4. Frontend (Next.js)
   - type: web
@@ -118,6 +120,7 @@ services:
     dockerfilePath: frontend/Dockerfile
     plan: free
     envVars:
+      - fromGroup: valhalla-shared
       - key: NEXT_PUBLIC_API_URL
         fromService:
           type: web
