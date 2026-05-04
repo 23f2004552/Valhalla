@@ -25,8 +25,8 @@ services:
   - type: web
     name: valhalla-auth
     env: docker
-    dockerContext: .
-    dockerfilePath: auth-service/Dockerfile
+    dockerContext: auth-service
+    dockerfilePath: Dockerfile
     plan: free
     envVars:
       - key: DATABASE_URL
@@ -38,8 +38,8 @@ services:
   - type: web
     name: valhalla-menu
     env: docker
-    dockerContext: .
-    dockerfilePath: menu-service/Dockerfile
+    dockerContext: menu-service
+    dockerfilePath: Dockerfile
     plan: free
     envVars:
       - key: DATABASE_URL
@@ -51,8 +51,8 @@ services:
   - type: web
     name: valhalla-order
     env: docker
-    dockerContext: .
-    dockerfilePath: order-service/Dockerfile
+    dockerContext: order-service
+    dockerfilePath: Dockerfile
     plan: free
     envVars:
       - key: DATABASE_URL
@@ -64,8 +64,8 @@ services:
   - type: web
     name: valhalla-inventory
     env: docker
-    dockerContext: .
-    dockerfilePath: inventory-service/Dockerfile
+    dockerContext: inventory-service
+    dockerfilePath: Dockerfile
     plan: free
     envVars:
       - key: DATABASE_URL
@@ -77,8 +77,8 @@ services:
   - type: web
     name: valhalla-payment
     env: docker
-    dockerContext: .
-    dockerfilePath: payment-service/Dockerfile
+    dockerContext: payment-service
+    dockerfilePath: Dockerfile
     plan: free
     envVars:
       - key: DATABASE_URL
@@ -90,8 +90,8 @@ services:
   - type: web
     name: valhalla-analytics
     env: docker
-    dockerContext: .
-    dockerfilePath: analytics-service/Dockerfile
+    dockerContext: analytics-service
+    dockerfilePath: Dockerfile
     plan: free
     envVars:
       - key: DATABASE_URL
@@ -104,8 +104,8 @@ services:
   - type: web
     name: valhalla-gateway
     env: docker
-    dockerContext: .
-    dockerfilePath: gateway/Dockerfile
+    dockerContext: gateway
+    dockerfilePath: Dockerfile
     plan: free
     envVars:
       - fromGroup: valhalla-shared
@@ -114,10 +114,10 @@ services:
   - type: web
     name: valhalla-frontend
     env: docker
-    dockerContext: .
-    dockerfilePath: frontend/Dockerfile
+    dockerContext: frontend
+    dockerfilePath: Dockerfile
     plan: free
     envVars:
       - fromGroup: valhalla-shared
       - key: NEXT_PUBLIC_API_URL
-        value: https://valhalla-gateway.onrender.com/api # Predictable URL
+        value: https://valhalla-gateway.onrender.com/api
