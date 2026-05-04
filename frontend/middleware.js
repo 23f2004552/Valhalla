@@ -1,45 +1,38 @@
 import { NextResponse } from 'next/server';
 
-/**
- * Next.js Middleware: Protects ALL /admin/* routes except the login page (/admin).
- * Checks for rms_token cookie containing valid JWT.
- * Unauthenticated users are redirected to /admin (login page).
- */
 export function middleware(request) {
-    const { pathname } = request.nextUrl;
+  const { pathname, search } = request.nextUrl;
 
-    // Protect ALL admin sub-routes (dashboard, orders, inventory, payments, etc.)
-    // The login page at exactly /admin is excluded from protection
-    if (pathname.startsWith('/admin/')) {
-        const token = request.cookies.get('rms_token')?.value;
+  // Read environment variables at RUNTIME
+  const authUrl = (process.env.AUTH_SERVICE_URL || 'http://auth-service:5000').replace(/\/$/, '');
+  const menuUrl = (process.env.MENU_SERVICE_URL || 'http://menu-service:5000').replace(/\/$/, '');
+  const orderUrl = (process.env.ORDER_SERVICE_URL || 'http://order-service:5000').replace(/\/$/, '');
+  const inventoryUrl = (process.env.INVENTORY_SERVICE_URL || 'http://inventory-service:5000').replace(/\/$/, '');
+  const paymentUrl = (process.env.PAYMENT_SERVICE_URL || 'http://payment-service:5000').replace(/\/$/, '');
+  const analyticsUrl = (process.env.ANALYTICS_SERVICE_URL || 'http://analytics-service:5000').replace(/\/$/, '');
 
-        if (!token) {
-            const loginUrl = new URL('/admin', request.url);
-            return NextResponse.redirect(loginUrl);
-        }
+  if (pathname.startsWith('/api/auth')) {
+    return NextResponse.rewrite(new URL(pathname.replace('/api/auth', '') + search, authUrl));
+  }
+  if (pathname.startsWith('/api/menu')) {
+    return NextResponse.rewrite(new URL(pathname.replace('/api/menu', '/menu') + search, menuUrl));
+  }
+  if (pathname.startsWith('/api/inventory')) {
+    return NextResponse.rewrite(new URL(pathname.replace('/api/inventory', '/inventory') + search, inventoryUrl));
+  }
+  if (pathname.startsWith('/api/orders')) {
+    return NextResponse.rewrite(new URL(pathname.replace('/api/orders', '/orders') + search, orderUrl));
+  }
+  if (pathname.startsWith('/api/payments')) {
+    return NextResponse.rewrite(new URL(pathname.replace('/api/payments', '/payments') + search, paymentUrl));
+  }
+  if (pathname.startsWith('/api/analytics')) {
+    return NextResponse.rewrite(new URL(pathname.replace('/api/analytics', '') + search, analyticsUrl));
+  }
 
-        // Token exists — verify it's not expired (basic JWT decode)
-        try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            const now = Math.floor(Date.now() / 1000);
-
-            if (payload.exp && payload.exp < now) {
-                const loginUrl = new URL('/admin', request.url);
-                const response = NextResponse.redirect(loginUrl);
-                response.cookies.delete('rms_token');
-                return response;
-            }
-        } catch (e) {
-            const loginUrl = new URL('/admin', request.url);
-            const response = NextResponse.redirect(loginUrl);
-            response.cookies.delete('rms_token');
-            return response;
-        }
-    }
-
-    return NextResponse.next();
+  return NextResponse.next();
 }
 
 export const config = {
-    matcher: ['/admin/:path+'],
+  matcher: '/api/:path*',
 };
