@@ -8,19 +8,34 @@ const SalesChart = () => {
     useEffect(() => {
         const fetchData = async () => {
            try {
-               const rawData = await api.get('/analytics/daily-sales');
-               // Handle both array and object formats
-               if (Array.isArray(rawData)) {
-                   setData(rawData);
-               } else if (rawData && typeof rawData === 'object') {
-                   const chartData = Object.entries(rawData).map(([date, amount]) => ({
-                       date,
-                       amount: typeof amount === 'number' ? amount : 0
-                   }));
-                   setData(chartData);
+               const ordersData = await api.get('/orders');
+               if (Array.isArray(ordersData)) {
+                   // Aggregate orders by date
+                   const grouped = {};
+                   ordersData.forEach(order => {
+                       if (!order.created_at || order.status === 'cancelled') return;
+                       const date = order.created_at.split('T')[0];
+                       if (!grouped[date]) grouped[date] = 0;
+                       grouped[date] += (order.total || 0);
+                   });
+                   
+                   const chartData = Object.entries(grouped)
+                       .sort(([dateA], [dateB]) => new Date(dateA) - new Date(dateB))
+                       .map(([date, amount]) => ({
+                           date,
+                           amount
+                       }));
+                       
+                   // If no orders at all, fallback to a single zero day to prevent empty chart
+                   if (chartData.length === 0) {
+                       const today = new Date().toISOString().split('T')[0];
+                       setData([{ date: today, amount: 0 }]);
+                   } else {
+                       setData(chartData);
+                   }
                }
            } catch (err) {
-               console.error("Failed to fetch analytics:", err);
+               console.error("Failed to fetch order analytics:", err);
            }
         };
         fetchData();
