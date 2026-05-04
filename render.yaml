@@ -11,6 +11,8 @@ envVarGroups:
         value: https://valhalla-suite.onrender.com
       - key: RABBITMQ_HOST
         value: "replace-with-your-cloudamqp-hostname"
+      - key: REDIS_HOST
+        value: valhalla-redis
 
 services:
   # 1. Redis Cache
@@ -44,10 +46,6 @@ services:
         fromDatabase:
           name: valhalla-db
           property: connectionString
-      - key: REDIS_HOST
-        fromRedis:
-          name: valhalla-redis
-          property: host
       - fromGroup: valhalla-shared
 
   - type: web
@@ -122,7 +120,4 @@ services:
     envVars:
       - fromGroup: valhalla-shared
       - key: NEXT_PUBLIC_API_URL
-        fromService:
-          type: web
-          name: valhalla-gateway
-          property: host
+        value: https://valhalla-gateway.onrender.com/api # Predictable URL
