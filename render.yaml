@@ -1,16 +1,15 @@
-services:
-  # 1. PostgreSQL Database (Shared by all services)
-  - type: database
-    name: valhalla-db
+databases:
+  - name: valhalla-db
     plan: free
 
-  # 2. Redis Cache
+services:
+  # 1. Redis Cache
   - type: redis
     name: valhalla-redis
     plan: free
-    ipAllowList: [] # Only allow internal access
+    ipAllowList: []
 
-  # 3. Microservices (Backend)
+  # 2. Microservices (Backend)
   - type: web
     name: valhalla-auth
     env: docker
@@ -22,6 +21,8 @@ services:
         fromDatabase:
           name: valhalla-db
           property: connectionString
+      - key: DB_NAME
+        value: postgres
       - key: SERVICE_TOKEN
         generateValue: true
 
@@ -53,7 +54,7 @@ services:
           name: valhalla-db
           property: connectionString
       - key: RABBITMQ_HOST
-        sync: false # Set this manually to your CloudAMQP URL in Render Dashboard
+        sync: false
       - key: SERVICE_TOKEN
         fromService:
           type: web
@@ -96,9 +97,9 @@ services:
           name: valhalla-db
           property: connectionString
       - key: RABBITMQ_HOST
-        sync: false # Set this manually to your CloudAMQP URL
+        sync: false
 
-  # 4. API Gateway (Nginx)
+  # 3. API Gateway (Nginx)
   - type: web
     name: valhalla-gateway
     env: docker
@@ -107,10 +108,9 @@ services:
     plan: free
     envVars:
       - key: FRONTEND_ORIGIN
-        value: https://valhalla-suite.onrender.com # Change this after frontend is deployed
-    # Note: We will need to update the nginx.conf to use Render's internal hostnames
+        value: https://valhalla-suite.onrender.com
 
-  # 5. Frontend (Next.js)
+  # 4. Frontend (Next.js)
   - type: web
     name: valhalla-frontend
     env: docker
