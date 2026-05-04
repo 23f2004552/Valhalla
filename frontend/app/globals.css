@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+@theme {
+  /* Savor.it Inspired Palette - Editorial Organic */
+  --color-background-primary: #fff9eb; /* Cream */
+  --color-background-secondary: #f4efdf;
+  --color-text-primary: #370808; /* Deep Maroon/Brown */
+  --color-accent-olive: #14371b; /* Forest Green */
+  --color-accent-gold: #f8e47d; /* Saffron Yellow */
+
+  /* Admin specific mappings (keep dark mode for admin if desired, or invert) */
+  --color-admin-bg: #0a0a0a;
+  --color-admin-card: #1c1a18;
+  --color-admin-text: #eaeaea;
+
+  /* Savor Typography overrides (We will load these in layout.js) */
+  --font-serif: var(--font-playfair);
+  --font-sans: var(--font-inter);
+}
+
+/* Base styles using the new theme variables */
+body {
+  background-color: var(--color-background-primary);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  position: relative;
+  /* Prevent horizontal scroll from GSAP animations */
+  overflow-x: hidden;
+}
+
+/* ── Typography Utility Classes ── */
+.font-luxury {
+  font-family: var(--font-serif);
+  font-weight: 900;
+  /* Heavy didone serifs look best with very tight tracking */
+  letter-spacing: -0.03em;
+  line-height: 0.92;
+}
+
+/* ── GSAP Animation Setup Classes ── */
+/* Base class for mask reveals (hides overflow) */
+.mask-reveal-container {
+  overflow: hidden;
+  display: inline-block;
+}
+
+/* Initial state for text waiting to be revealed by GSAP.
+   GSAP sets translateY(110%) at runtime so text is visible if JS fails. */
+.mask-reveal-text {
+  display: inline-block;
+}
+
+/* SVG Line Setup */
+.svg-draw-line {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+}
+
+/* Body scroll lock */
+body.cart-open {
+  overflow: hidden;
+}
+
+/* Lenis Specific Reset */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
