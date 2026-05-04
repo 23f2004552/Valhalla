@@ -17,6 +17,7 @@ const STATUS_FLOW = ["pending", "preparing", "ready", "completed"];
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState([]);
+  const [menuItems, setMenuItems] = useState({});
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
 
@@ -32,6 +33,23 @@ export default function AdminOrdersPage() {
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    const fetchMenu = async () => {
+      try {
+        const res = await fetch(`${API_URL}/menu`);
+        if (res.ok) {
+          const data = await res.json();
+          const map = {};
+          data.forEach(item => { map[item.id] = item.name });
+          setMenuItems(map);
+        }
+      } catch (e) {
+        console.error("Failed to fetch menu:", e);
+      }
+    };
+    fetchMenu();
   }, []);
 
   useEffect(() => {
@@ -142,11 +160,24 @@ export default function AdminOrdersPage() {
                       {order.customer_name || "Guest"} · {formatTime(order.created_at)}
                     </p>
                   </div>
-                  <div className={`flex items-center gap-1.5 ${cfg.color} text-xs font-mono uppercase`}>
+                  <div className={`flex items-center gap-1.5 ${cfg.color} text-xs font-mono uppercase shrink-0`}>
                     {cfg.icon}
                     {cfg.label}
                   </div>
                 </div>
+
+                {/* Order Items */}
+                {order.items && order.items.length > 0 && (
+                  <div className="mb-4">
+                    <ul className="space-y-1.5 border-t border-white/5 pt-3">
+                      {order.items.map((i, idx) => (
+                        <li key={idx} className="flex justify-between items-start text-white/70 text-sm font-serif">
+                          <span><span className="text-accent-gold mr-2 font-sans text-xs">{i.qty}x</span> {menuItems[i.menu_item_id] || `Item #${i.menu_item_id}`}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
                 {/* Total */}
                 <div className="flex justify-between items-end mb-4 pt-3 border-t border-white/5">

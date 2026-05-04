@@ -86,6 +86,7 @@ class OrderOut(BaseModel):
     customer_name: Optional[str] = ""
     table_number: Optional[int] = None
     created_at: Optional[str] = None
+    items: Optional[List[OrderItemOut]] = []
     class Config:
         from_attributes = True
 
@@ -98,6 +99,7 @@ def list_orders(db: Session = Depends(get_db)):
     orders = db.query(Order).order_by(Order.id.desc()).all()
     result = []
     for o in orders:
+        order_items = db.query(OrderItem).filter(OrderItem.order_id == o.id).all()
         result.append({
             "id": o.id,
             "status": o.status,
@@ -105,6 +107,7 @@ def list_orders(db: Session = Depends(get_db)):
             "customer_name": o.customer_name,
             "table_number": o.table_number,
             "created_at": o.created_at.isoformat() if o.created_at else None,
+            "items": [{"id": i.id, "menu_item_id": i.menu_item_id, "qty": i.qty} for i in order_items]
         })
     return result
 
