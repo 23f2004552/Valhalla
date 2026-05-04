@@ -12,8 +12,25 @@ export default function MenuSection({ title, items }) {
     "Wagyu Tartare": "/images/dish_wagyu.jpg",
     "Velvet Cacao": "/images/dish_chocolate.jpg",
   };
-  const getImage = (item) =>
-    item.image_url || dishImages[item.name] || "/images/dish_default.jpg";
+  const getImage = (item) => {
+    let url = item.image_url || dishImages[item.name] || "/images/dish_default.jpg";
+    
+    // Automatically convert Google Drive links to direct image CDN links
+    if (url.includes("drive.google.com")) {
+      let fileId = null;
+      if (url.includes("file/d/")) {
+        const match = url.match(/file\/d\/([a-zA-Z0-9_-]+)/);
+        if (match) fileId = match[1];
+      } else if (url.includes("uc?")) {
+        const match = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+        if (match) fileId = match[1];
+      }
+      if (fileId) {
+        url = `https://lh3.googleusercontent.com/d/${fileId}`;
+      }
+    }
+    return url;
+  };
 
   const { addToCart } = useCart();
   const sectionRef = useRef(null);
