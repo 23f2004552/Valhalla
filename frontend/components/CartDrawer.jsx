@@ -282,8 +282,8 @@ export default function CartDrawer() {
               <label className="block text-[10px] text-white/40 uppercase tracking-[0.3em] mb-2">
                 Payment Method
               </label>
-              <div className="grid grid-cols-2 gap-2">
-                {["card", "cash"].map((method) => (
+              <div className="grid grid-cols-3 gap-2">
+                {["card", "upi", "cash"].map((method) => (
                   <button
                     key={method}
                     onClick={() => setPaymentMethod(method)}
@@ -298,6 +298,16 @@ export default function CartDrawer() {
                 ))}
               </div>
             </div>
+
+            {/* UPI QR Code Display */}
+            {paymentMethod === "upi" && (
+              <div className="mt-4 flex flex-col items-center justify-center p-4 bg-white/5 border border-white/10 rounded-lg">
+                <p className="text-xs text-white/60 mb-3 font-mono tracking-widest uppercase">Scan to Pay</p>
+                <div className="bg-white p-2 rounded-lg">
+                  <img src="/upi-qr.png" alt="UPI QR Code" className="w-32 h-32 object-contain" />
+                </div>
+              </div>
+            )}
 
             {/* Footer */}
             <div className="mt-4 pt-4 border-t border-accent-gold/20">
