@@ -13,13 +13,16 @@ export default function CartDrawer() {
     isCartOpen,
     setIsCartOpen,
     cartItems,
+    addToCart,
     removeFromCart,
     updateQuantity,
     cartTotal,
     clearCart,
     activeOrderId,
     setActiveOrderId,
-    clearActiveOrder
+    clearActiveOrder,
+    tableNumber,
+    setTableNumber
   } = useCart();
 
   const [status, setStatus] = useState("idle");
@@ -28,7 +31,15 @@ export default function CartDrawer() {
   const [customerName, setCustomerName] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("card");
   const [activeOrderDetails, setActiveOrderDetails] = useState(null);
+  const [isModifyMode, setIsModifyMode] = useState(false);
   const router = useRouter();
+
+  // Sync selectedTable from QR code context
+  useEffect(() => {
+    if (tableNumber) {
+      setSelectedTable(tableNumber);
+    }
+  }, [tableNumber]);
 
   useEffect(() => {
     if (isCartOpen) {
@@ -48,7 +59,6 @@ export default function CartDrawer() {
         if (res.ok) {
           const data = await res.json();
           setActiveOrderDetails(data);
-          // If cancelled or completed, maybe clear it after a delay, but let's just keep it so they can see it's done.
         } else if (res.status === 404) {
           clearActiveOrder();
         }
@@ -58,7 +68,7 @@ export default function CartDrawer() {
     };
 
     fetchOrderStatus();
-    const interval = setInterval(fetchOrderStatus, 5000); // Poll every 5s
+    const interval = setInterval(fetchOrderStatus, 5000);
     return () => clearInterval(interval);
   }, [activeOrderId, isCartOpen, clearActiveOrder]);
 
@@ -116,13 +126,53 @@ export default function CartDrawer() {
       clearCart();
       setActiveOrderId(orderData.id);
       setStatus("idle");
-      setSelectedTable(null);
+      setSelectedTable(tableNumber || null);
       setCustomerName("");
-      // Removed the alert to provide a smoother transition to the tracking view
     } catch (error) {
       setStatus("error");
       setErrorMessage(error.message || "Failed to place order.");
     }
+  };
+
+  // ── Update existing order ──
+  const handleUpdateOrder = async () => {
+    if (!activeOrderId || cartItems.length === 0) return;
+
+    setStatus("loading");
+    setErrorMessage("");
+    try {
+      const res = await fetch(`${API_URL}/orders/${activeOrderId}/items`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: cartItems.map((item) => ({
+            menu_item_id: item.id,
+            qty: item.quantity,
+          })),
+          total: (activeOrderDetails?.total || 0) + cartTotal,
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || "Cannot update order at this time.");
+      }
+
+      clearCart();
+      setIsModifyMode(false);
+      setStatus("idle");
+    } catch (error) {
+      setStatus("error");
+      setErrorMessage(error.message || "Failed to update order.");
+    }
+  };
+
+  const canModifyOrder = activeOrderDetails &&
+    (activeOrderDetails.status === "pending" || activeOrderDetails.status === "preparing");
+
+  const handleModifyClick = () => {
+    setIsModifyMode(true);
+    router.push("/menu");
   };
 
   return (
@@ -151,17 +201,81 @@ export default function CartDrawer() {
         {/* Header */}
         <div className="flex justify-between items-center mb-6 pb-4 border-b border-white/5">
           <h2 className="text-2xl font-serif text-accent-gold">
-            {cartItems.length === 0 && activeOrderDetails ? "Live Tracking" : "Your Selection"}
+            {isModifyMode ? "Update Order" : cartItems.length === 0 && activeOrderDetails ? "Live Tracking" : "Your Selection"}
           </h2>
           <button
-            onClick={() => setIsCartOpen(false)}
+            onClick={() => { setIsCartOpen(false); if (isModifyMode && cartItems.length === 0) setIsModifyMode(false); }}
             className="text-white/50 hover:text-white transition-colors w-11 h-11 flex items-center justify-center"
           >
             ✕
           </button>
         </div>
 
-        {cartItems.length === 0 ? (
+        {/* ── Modify Mode: show items to add to existing order ── */}
+        {isModifyMode && cartItems.length > 0 ? (
+          <>
+            <div className="flex-1 overflow-y-auto pr-2 pb-4 space-y-4">
+              <div className="bg-accent-gold/10 border border-accent-gold/20 rounded-lg p-3 mb-2">
+                <p className="text-xs text-accent-gold font-mono tracking-widest uppercase">
+                  Adding items to Order #{activeOrderId}
+                </p>
+              </div>
+              {cartItems.map((item) => (
+                <div key={item.id} className="flex justify-between items-start group">
+                  <div className="flex-1">
+                    <h4 className="text-white font-serif text-lg">{item.name}</h4>
+                    <p className="text-accent-gold/60 text-sm">₹{item.price}</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 border border-white/10 rounded px-2 py-1">
+                      <button onClick={() => updateQuantity(item.id, -1)} className="text-white/50 hover:text-white w-7 h-7 flex items-center justify-center">−</button>
+                      <span className="text-xs text-white w-4 text-center">{item.quantity}</span>
+                      <button onClick={() => updateQuantity(item.id, 1)} className="text-white/50 hover:text-white w-7 h-7 flex items-center justify-center">+</button>
+                    </div>
+                    <button onClick={() => removeFromCart(item.id)} className="text-red-500/50 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity w-7 h-7 flex items-center justify-center">✕</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Update Footer */}
+            <div className="pt-4 border-t border-accent-gold/20 shrink-0">
+              <div className="flex justify-between items-end mb-4">
+                <div>
+                  <span className="text-white/50 text-xs uppercase tracking-widest block">Additional Total</span>
+                </div>
+                <span className="text-3xl font-serif text-accent-gold">₹{cartTotal}</span>
+              </div>
+
+              {status === "error" && (
+                <p className="text-red-400 text-xs text-center mb-3">{errorMessage}</p>
+              )}
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { clearCart(); setIsModifyMode(false); }}
+                  className="flex-1 bg-white/10 text-white py-4 font-serif text-sm hover:bg-white/20 transition-colors duration-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUpdateOrder}
+                  disabled={status === "loading"}
+                  className="flex-[2] bg-accent-gold text-black py-4 font-serif text-lg hover:bg-white transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  {status === "loading" ? (
+                    <span className="inline-flex items-center gap-2">
+                      <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                      Updating…
+                    </span>
+                  ) : (
+                    "Add to Order"
+                  )}
+                </button>
+              </div>
+            </div>
+          </>
+        ) : cartItems.length === 0 && !isModifyMode ? (
           activeOrderDetails ? (
             <div className="flex-1 flex flex-col pt-4">
               <div className="text-center mb-8">
@@ -183,13 +297,40 @@ export default function CartDrawer() {
                   <span>Guest</span>
                   <span className="text-white">{activeOrderDetails.customer_name || 'Guest'}</span>
                 </div>
-                <div className="flex justify-between text-sm text-white/60">
+                <div className="flex justify-between text-sm mb-2 text-white/60">
                   <span>Table</span>
                   <span className="text-accent-gold">Table {activeOrderDetails.table_number}</span>
                 </div>
+                <div className="flex justify-between text-sm text-white/60">
+                  <span>Total</span>
+                  <span className="text-accent-gold">₹{activeOrderDetails.total}</span>
+                </div>
               </div>
 
-              <div className="mt-auto">
+              {/* Order Items */}
+              {activeOrderDetails.items && activeOrderDetails.items.length > 0 && (
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10 mb-6">
+                  <div className="text-[10px] text-white/40 uppercase tracking-[0.3em] mb-3">Order Items</div>
+                  {activeOrderDetails.items.map((item, idx) => (
+                    <div key={idx} className="flex justify-between text-sm text-white/60 mb-1">
+                      <span>Item #{item.menu_item_id}</span>
+                      <span className="text-white">×{item.qty}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="mt-auto space-y-3">
+                {/* Modify Order Button */}
+                {canModifyOrder && (
+                  <button
+                    onClick={handleModifyClick}
+                    className="w-full bg-blue-500/20 text-blue-400 border border-blue-500/30 py-4 font-serif text-lg hover:bg-blue-500/30 transition-colors duration-300 rounded"
+                  >
+                    ✏️ Modify Order
+                  </button>
+                )}
+
                 {activeOrderDetails.status === 'completed' || activeOrderDetails.status === 'cancelled' ? (
                   <button
                     onClick={() => {
@@ -245,23 +386,30 @@ export default function CartDrawer() {
             {/* ── Table Selection ── */}
             <div className="mt-4 pt-4 border-t border-white/5">
               <label className="block text-[10px] text-white/40 uppercase tracking-[0.3em] mb-3">
-                Assign Table
+                {tableNumber ? "Table (Auto-assigned via QR)" : "Assign Table"}
               </label>
-              <div className="grid grid-cols-6 gap-2">
-                {TABLES.map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => setSelectedTable(t)}
-                    className={`py-2 rounded text-xs font-mono transition-all duration-200 ${
-                      selectedTable === t
-                        ? "bg-accent-gold text-black font-bold shadow-lg shadow-accent-gold/20"
-                        : "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white border border-white/10"
-                    }`}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
+              {tableNumber ? (
+                <div className="bg-accent-gold/10 border border-accent-gold/30 rounded-lg p-3 text-center">
+                  <span className="text-accent-gold font-serif text-2xl">Table {tableNumber}</span>
+                  <p className="text-white/30 text-[10px] mt-1 uppercase tracking-widest">Scanned from QR Code</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-6 gap-2">
+                  {TABLES.map((t) => (
+                    <button
+                      key={t}
+                      onClick={() => setSelectedTable(t)}
+                      className={`py-2 rounded text-xs font-mono transition-all duration-200 ${
+                        selectedTable === t
+                          ? "bg-accent-gold text-black font-bold shadow-lg shadow-accent-gold/20"
+                          : "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white border border-white/10"
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* ── Guest Name ── */}

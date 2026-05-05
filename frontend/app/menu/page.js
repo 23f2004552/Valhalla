@@ -1,20 +1,35 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import Navbar from "../../components/Navbar";
 import MenuSection from "../../components/MenuSection";
 import MenuSkeleton from "../../components/MenuSkeleton";
 import Footer from "../../components/Footer";
 import ScrollReveal from "../../components/ScrollReveal";
+import { useCart } from "../../context/CartContext";
 
 const API_URL = "/api";
 
 export default function MenuPage() {
+  const searchParams = useSearchParams();
+  const { setTableNumber, tableNumber } = useCart();
   const [items, setItems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Auto-assign table from QR code URL param
+  useEffect(() => {
+    const tableParam = searchParams.get("table");
+    if (tableParam) {
+      const num = parseInt(tableParam, 10);
+      if (num >= 1 && num <= 12) {
+        setTableNumber(num);
+      }
+    }
+  }, [searchParams, setTableNumber]);
 
   useEffect(() => {
     async function fetchMenu() {

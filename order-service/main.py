@@ -93,6 +93,10 @@ class OrderOut(BaseModel):
 class StatusUpdate(BaseModel):
     status: str
 
+class OrderUpdateItems(BaseModel):
+    items: List[OrderItemBase]
+    total: Optional[float] = None
+
 # ── Routes ──
 @app.get("/orders", response_model=List[OrderOut])
 def list_orders(db: Session = Depends(get_db)):
@@ -157,6 +161,39 @@ def create_order(order: OrderCreate, db: Session = Depends(get_db)):
         "created_at": db_order.created_at.isoformat() if db_order.created_at else None,
     }
 
+@app.put("/orders/{order_id}/items")
+def update_order_items(order_id: int, update: OrderUpdateItems, db: Session = Depends(get_db)):
+    """Allow customers to add items to an order while it is still pending or preparing."""
+    db_order = db.query(Order).filter(Order.id == order_id).first()
+    if not db_order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if db_order.status not in ("pending", "preparing"):
+        raise HTTPException(status_code=400, detail="Order can no longer be modified")
+
+    # Add new items to the order
+    for item in update.items:
+        q = item.qty if item.qty > 1 else item.quantity
+        db_item = OrderItem(order_id=db_order.id, menu_item_id=item.menu_item_id, qty=q)
+        db.add(db_item)
+
+    # Update total if provided
+    if update.total is not None:
+        db_order.total = update.total
+
+    db.commit()
+    db.refresh(db_order)
+
+    items = db.query(OrderItem).filter(OrderItem.order_id == order_id).all()
+    return {
+        "id": db_order.id,
+        "status": db_order.status,
+        "total": db_order.total,
+        "customer_name": db_order.customer_name,
+        "table_number": db_order.table_number,
+        "created_at": db_order.created_at.isoformat() if db_order.created_at else None,
+        "items": [{"id": i.id, "menu_item_id": i.menu_item_id, "qty": i.qty} for i in items],
+    }
+
 @app.put("/orders/{order_id}/status", response_model=OrderOut)
 def update_status(order_id: int, update: StatusUpdate, db: Session = Depends(get_db)):
     db_order = db.query(Order).filter(Order.id == order_id).first()
@@ -181,3 +218,4 @@ def read_root():
 @app.get("/health")
 def health():
     return {"status": "ok", "service": "order-service"}
+

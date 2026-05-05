@@ -40,6 +40,7 @@ export function CartProvider({ children }) {
   });
 
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [tableNumber, setTableNumber] = useState(null);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -119,7 +120,9 @@ export function CartProvider({ children }) {
       cartCount,
       activeOrderId,
       setActiveOrderId,
-      clearActiveOrder
+      clearActiveOrder,
+      tableNumber,
+      setTableNumber
     }}>
       {children}
     </CartContext.Provider>

@@ -9,6 +9,7 @@ import {
   LuCoffee,
   LuWarehouse,
   LuCreditCard,
+  LuQrCode,
   LuActivity,
   LuSettings,
   LuLogOut,
@@ -22,6 +23,7 @@ const menuItems = [
   { name: "Menu", path: "/admin/menu", icon: <LuCoffee /> },
   { name: "Inventory", path: "/admin/inventory", icon: <LuWarehouse /> },
   { name: "Payments", path: "/admin/payments", icon: <LuCreditCard /> },
+  { name: "Tables", path: "/admin/tables", icon: <LuQrCode /> },
   { name: "Metrics", path: "/admin/metrics", icon: <LuActivity /> },
   { name: "Settings", path: "/admin/settings", icon: <LuSettings /> },
 ];
