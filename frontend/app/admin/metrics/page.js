@@ -3,7 +3,7 @@
 import { LuExternalLink } from "react-icons/lu";
 
 export default function MetricsPage() {
-  const GRAFANA_URL = process.env.NEXT_PUBLIC_GRAFANA_URL || "http://localhost:3001";
+  const GRAFANA_URL = process.env.NEXT_PUBLIC_GRAFANA_URL || "https://valhalla-grafana.onrender.com";
   const dashboardUrl = `${GRAFANA_URL}/d/valhalla-overview/valhalla-overview?orgId=1&kiosk=tv`;
 
   return (

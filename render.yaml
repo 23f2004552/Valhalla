@@ -111,3 +111,17 @@ services:
         value: https://valhalla-payment.onrender.com
       - key: ANALYTICS_SERVICE_URL
         value: https://valhalla-analytics.onrender.com
+
+  - type: web
+    name: valhalla-prometheus
+    env: docker
+    dockerfilePath: ./prometheus/Dockerfile
+    dockerContext: .
+    plan: free
+
+  - type: web
+    name: valhalla-grafana
+    env: docker
+    dockerfilePath: ./grafana/Dockerfile
+    dockerContext: .
+    plan: free

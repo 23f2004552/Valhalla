@@ -6,11 +6,12 @@ rule_files:
 
 scrape_configs:
   - job_name: 'restaurant-system'
+    scheme: https
     static_configs:
       - targets:
-        - 'rms-order:5000'
-        - 'rms-inventory:5000'
-        - 'rms-menu:5000'
-        - 'rms-payment:5000'
-        - 'rms-auth:5000'
-        - 'rms-analytics:5000'
+        - 'valhalla-order.onrender.com'
+        - 'valhalla-inventory.onrender.com'
+        - 'valhalla-menu.onrender.com'
+        - 'valhalla-payment.onrender.com'
+        - 'valhalla-auth.onrender.com'
+        - 'valhalla-analytics.onrender.com'
