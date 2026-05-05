@@ -8,6 +8,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 const STATUS_CONFIG = {
   completed: { label: "Completed", color: "text-green-400", bg: "bg-green-400/10", border: "border-green-400/20", icon: <LuCheck /> },
   failed:    { label: "Failed",    color: "text-red-400",   bg: "bg-red-400/10",   border: "border-red-400/20",   icon: <LuX /> },
+  pending:   { label: "Pending",   color: "text-yellow-400",bg: "bg-yellow-400/10",border: "border-yellow-400/20",icon: <span className="animate-pulse">●</span> },
 };
 
 export default function AdminPaymentsPage() {
@@ -34,6 +35,24 @@ export default function AdminPaymentsPage() {
     const interval = setInterval(fetchPayments, 15000);
     return () => clearInterval(interval);
   }, [fetchPayments]);
+
+  const updateStatus = async (paymentId, newStatus) => {
+    try {
+      const res = await fetch(`${API_URL}/payments/${paymentId}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (res.ok) {
+        fetchPayments();
+      } else {
+        alert("Failed to update status");
+      }
+    } catch (e) {
+      console.error("Error updating status", e);
+      alert("Error updating status");
+    }
+  };
 
   const filteredPayments = filter === "all" ? payments : payments.filter((p) => p.status === filter);
 
@@ -81,7 +100,7 @@ export default function AdminPaymentsPage() {
 
       {/* Filter Tabs */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-        {["all", "completed", "failed"].map((s) => (
+        {["all", "pending", "completed", "failed"].map((s) => (
           <button
             key={s}
             onClick={() => setFilter(s)}
@@ -118,6 +137,7 @@ export default function AdminPaymentsPage() {
                   <th className="p-4 font-normal">Order ID</th>
                   <th className="p-4 font-normal text-right">Amount</th>
                   <th className="p-4 font-normal text-center">Status</th>
+                  <th className="p-4 font-normal text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
@@ -135,6 +155,14 @@ export default function AdminPaymentsPage() {
                           {cfg.icon}
                           {cfg.label}
                         </span>
+                      </td>
+                      <td className="p-4 text-right">
+                        {payment.status === "pending" && (
+                          <div className="flex justify-end gap-2">
+                            <button onClick={() => updateStatus(payment.id, "completed")} className="text-green-400 hover:text-green-300 bg-green-400/10 hover:bg-green-400/20 px-2 py-1 rounded text-xs transition-colors">Approve</button>
+                            <button onClick={() => updateStatus(payment.id, "failed")} className="text-red-400 hover:text-red-300 bg-red-400/10 hover:bg-red-400/20 px-2 py-1 rounded text-xs transition-colors">Reject</button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   );

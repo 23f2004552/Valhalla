@@ -49,16 +49,37 @@ def list_payments(db: Session = Depends(get_db)):
 
 @app.post("/payments", response_model=PaymentOut, status_code=status.HTTP_201_CREATED)
 def create_payment(payment: PaymentCreate, db: Session = Depends(get_db)):
+    # Default to pending. We let the admin approve it.
     if payment.amount == 999.00:
         db_payment = Payment(order_id=payment.order_id, amount=payment.amount, status="failed")
         PAYMENT_FAILURES.inc()
     else:
-        db_payment = Payment(order_id=payment.order_id, amount=payment.amount, status="completed")
-        PAYMENT_SUCCESS.inc()
+        db_payment = Payment(order_id=payment.order_id, amount=payment.amount, status="pending")
+    
     db.add(db_payment)
     db.commit()
     db.refresh(db_payment)
     return db_payment
+
+class PaymentUpdate(BaseModel):
+    status: str
+
+@app.put("/payments/{payment_id}/status", response_model=PaymentOut)
+def update_payment_status(payment_id: int, update: PaymentUpdate, db: Session = Depends(get_db)):
+    payment = db.query(Payment).filter(Payment.id == payment_id).first()
+    if not payment:
+        raise HTTPException(status_code=404, detail="Payment not found")
+    
+    payment.status = update.status
+    db.commit()
+    db.refresh(payment)
+    
+    if update.status == "completed":
+        PAYMENT_SUCCESS.inc()
+    elif update.status == "failed":
+        PAYMENT_FAILURES.inc()
+        
+    return payment
 
 @app.get("/")
 def read_root():
