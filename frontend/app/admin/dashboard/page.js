@@ -5,9 +5,10 @@ export default async function AdminDashboard() {
     let stats = { revenue: 0, activeOrders: 0, alerts: 0 };
 
     try {
-        const [salesData, ordersData] = await Promise.all([
+        const [salesData, ordersData, inventoryData] = await Promise.all([
             fetchServer("/analytics/daily-sales").catch(() => null),
-            fetchServer("/orders").catch(() => [])
+            fetchServer("/orders").catch(() => []),
+            fetchServer("/inventory").catch(() => [])
         ]);
 
         // Calculate revenue directly from actual orders instead of mock analytics
@@ -24,11 +25,16 @@ export default async function AdminDashboard() {
         const activeOrdersCount = Array.isArray(ordersData) 
             ? ordersData.filter(o => o.status !== 'completed' && o.status !== 'cancelled').length 
             : 0;
+
+        // Count low-stock ingredients as alerts
+        const lowStockAlerts = Array.isArray(inventoryData)
+            ? inventoryData.filter(i => i.current_stock <= i.threshold).length
+            : 0;
         
         stats = {
             revenue: revenue || 0,
             activeOrders: activeOrdersCount,
-            alerts: 0
+            alerts: lowStockAlerts
         };
     } catch (error) {
         console.error("Failed to fetch analytics (SSR):", error.message);

@@ -13,6 +13,8 @@ export async function fetchServer(endpoint) {
       targetUrl = `${(process.env.ANALYTICS_SERVICE_URL || 'http://analytics-service:5000').replace(/\/$/, '')}/${parts.slice(1).join('/')}`;
   } else if (service === 'orders') {
       targetUrl = `${(process.env.ORDER_SERVICE_URL || 'http://order-service:5000').replace(/\/$/, '')}/${cleanEndpoint}`;
+  } else if (service === 'inventory') {
+      targetUrl = `${(process.env.INVENTORY_SERVICE_URL || 'http://inventory-service:5000').replace(/\/$/, '')}/${cleanEndpoint}`;
   } else {
       throw new Error(`Unknown service prefix in endpoint: ${endpoint}`);
   }
