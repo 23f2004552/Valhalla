@@ -13,6 +13,7 @@ services:
     name: valhalla-auth
     env: docker
     dockerfilePath: ./auth-service/Dockerfile
+    dockerContext: .
     plan: free
     envVars:
       - key: DATABASE_URL
@@ -25,6 +26,7 @@ services:
     name: valhalla-menu
     env: docker
     dockerfilePath: ./menu-service/Dockerfile
+    dockerContext: .
     plan: free
     envVars:
       - key: DATABASE_URL
@@ -37,6 +39,7 @@ services:
     name: valhalla-order
     env: docker
     dockerfilePath: ./order-service/Dockerfile
+    dockerContext: .
     plan: free
     envVars:
       - key: DATABASE_URL
@@ -51,6 +54,7 @@ services:
     name: valhalla-inventory
     env: docker
     dockerfilePath: ./inventory-service/Dockerfile
+    dockerContext: .
     plan: free
     envVars:
       - key: DATABASE_URL
@@ -63,6 +67,7 @@ services:
     name: valhalla-payment
     env: docker
     dockerfilePath: ./payment-service/Dockerfile
+    dockerContext: .
     plan: free
     envVars:
       - key: DATABASE_URL
@@ -75,6 +80,7 @@ services:
     name: valhalla-analytics
     env: docker
     dockerfilePath: ./analytics-service/Dockerfile
+    dockerContext: .
     plan: free
     envVars:
       - key: DATABASE_URL
@@ -89,6 +95,7 @@ services:
     name: valhalla-frontend
     env: docker
     dockerfilePath: ./frontend/Dockerfile
+    dockerContext: .
     plan: free
     envVars:
       - fromGroup: valhalla-shared
