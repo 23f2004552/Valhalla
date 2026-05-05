@@ -9,7 +9,7 @@ import {
   LuCoffee,
   LuWarehouse,
   LuCreditCard,
-  LuChartLine,
+  LuActivity,
   LuSettings,
   LuLogOut,
   LuMenu,
@@ -22,7 +22,7 @@ const menuItems = [
   { name: "Menu", path: "/admin/menu", icon: <LuCoffee /> },
   { name: "Inventory", path: "/admin/inventory", icon: <LuWarehouse /> },
   { name: "Payments", path: "/admin/payments", icon: <LuCreditCard /> },
-  { name: "Analytics", path: "/admin/analytics", icon: <LuChartLine /> },
+  { name: "Metrics", path: "/admin/metrics", icon: <LuActivity /> },
   { name: "Settings", path: "/admin/settings", icon: <LuSettings /> },
 ];
 
