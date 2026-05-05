@@ -172,6 +172,7 @@ export default function CartDrawer() {
 
   const handleModifyClick = () => {
     setIsModifyMode(true);
+    setIsCartOpen(false);
     router.push("/menu");
   };
 
@@ -201,7 +202,7 @@ export default function CartDrawer() {
         {/* Header */}
         <div className="flex justify-between items-center mb-6 pb-4 border-b border-white/5">
           <h2 className="text-2xl font-serif text-accent-gold">
-            {isModifyMode ? "Update Order" : cartItems.length === 0 && activeOrderDetails ? "Live Tracking" : "Your Selection"}
+            {isModifyMode && cartItems.length > 0 ? "Update Order" : cartItems.length === 0 && activeOrderDetails ? "Live Tracking" : "Your Selection"}
           </h2>
           <button
             onClick={() => { setIsCartOpen(false); if (isModifyMode && cartItems.length === 0) setIsModifyMode(false); }}
@@ -275,7 +276,7 @@ export default function CartDrawer() {
               </div>
             </div>
           </>
-        ) : cartItems.length === 0 && !isModifyMode ? (
+        ) : cartItems.length === 0 ? (
           activeOrderDetails ? (
             <div className="flex-1 flex flex-col pt-4">
               <div className="text-center mb-8">
