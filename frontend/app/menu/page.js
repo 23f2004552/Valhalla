@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Navbar from "../../components/Navbar";
 import MenuSection from "../../components/MenuSection";
@@ -11,16 +11,10 @@ import { useCart } from "../../context/CartContext";
 
 const API_URL = "/api";
 
-export default function MenuPage() {
+function TableAssigner() {
   const searchParams = useSearchParams();
-  const { setTableNumber, tableNumber } = useCart();
-  const [items, setItems] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [inventory, setInventory] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { setTableNumber } = useCart();
 
-  // Auto-assign table from QR code URL param
   useEffect(() => {
     const tableParam = searchParams.get("table");
     if (tableParam) {
@@ -30,6 +24,16 @@ export default function MenuPage() {
       }
     }
   }, [searchParams, setTableNumber]);
+
+  return null;
+}
+
+export default function MenuPage() {
+  const [items, setItems] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [inventory, setInventory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     async function fetchMenu() {
@@ -61,6 +65,11 @@ export default function MenuPage() {
   return (
     <main className="bg-background-primary min-h-screen pt-24">
       <Navbar />
+
+      {/* Suspense-wrapped search params reader */}
+      <Suspense fallback={null}>
+        <TableAssigner />
+      </Suspense>
 
       {/* Header */}
       <ScrollReveal className="text-center py-12 px-6">
