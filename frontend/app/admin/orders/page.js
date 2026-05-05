@@ -17,19 +17,28 @@ const STATUS_FLOW = ["pending", "preparing", "ready", "completed"];
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState([]);
+  const [payments, setPayments] = useState([]);
   const [menuItems, setMenuItems] = useState({});
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
 
-  const fetchOrders = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     try {
-      const res = await fetch(`${API_URL}/orders`);
-      if (res.ok) {
-        const data = await res.json();
+      const [ordersRes, paymentsRes] = await Promise.all([
+        fetch(`${API_URL}/orders`),
+        fetch(`${API_URL}/payments`)
+      ]);
+      
+      if (ordersRes.ok) {
+        const data = await ordersRes.json();
         setOrders(data);
       }
+      if (paymentsRes.ok) {
+        const data = await paymentsRes.json();
+        setPayments(Array.isArray(data) ? data : []);
+      }
     } catch (e) {
-      console.error("Failed to fetch orders:", e);
+      console.error("Failed to fetch data:", e);
     } finally {
       setLoading(false);
     }
@@ -53,10 +62,10 @@ export default function AdminOrdersPage() {
   }, []);
 
   useEffect(() => {
-    fetchOrders();
-    const interval = setInterval(fetchOrders, 10000);
+    fetchData();
+    const interval = setInterval(fetchData, 10000);
     return () => clearInterval(interval);
-  }, [fetchOrders]);
+  }, [fetchData]);
 
   const updateStatus = async (orderId, newStatus) => {
     try {
@@ -72,6 +81,25 @@ export default function AdminOrdersPage() {
       }
     } catch (e) {
       console.error("Failed to update status:", e);
+    }
+  };
+
+  const handlePaymentApproval = async (orderId, paymentId, isApproved) => {
+    try {
+      const paymentStatus = isApproved ? "completed" : "failed";
+      const paymentRes = await fetch(`${API_URL}/payments/${paymentId}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: paymentStatus }),
+      });
+
+      if (paymentRes.ok) {
+        // If approved, move to preparing. If rejected, cancel.
+        await updateStatus(orderId, isApproved ? "preparing" : "cancelled");
+        fetchData();
+      }
+    } catch (e) {
+      console.error("Payment approval failed", e);
     }
   };
 
@@ -144,6 +172,7 @@ export default function AdminOrdersPage() {
           {filteredOrders.map((order) => {
             const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending;
             const next = getNextStatus(order.status);
+            const payment = payments.find((p) => p.order_id === order.id);
 
             return (
               <div
@@ -194,21 +223,40 @@ export default function AdminOrdersPage() {
 
                 {/* Action Buttons */}
                 <div className="flex gap-2">
-                  {next && (
-                    <button
-                      onClick={() => updateStatus(order.id, next)}
-                      className="flex-1 bg-white/10 hover:bg-accent-gold hover:text-black text-white text-xs font-mono uppercase tracking-wider py-2.5 rounded transition-all duration-200"
-                    >
-                      → {STATUS_CONFIG[next]?.label}
-                    </button>
-                  )}
-                  {order.status !== "cancelled" && order.status !== "completed" && (
-                    <button
-                      onClick={() => updateStatus(order.id, "cancelled")}
-                      className="px-3 bg-red-500/10 hover:bg-red-500/30 text-red-400 text-xs rounded transition-all"
-                    >
-                      <LuX />
-                    </button>
+                  {order.status === "pending" && payment && payment.status === "pending" ? (
+                    <>
+                      <button
+                        onClick={() => handlePaymentApproval(order.id, payment.id, true)}
+                        className="flex-1 bg-green-500/10 hover:bg-green-500/30 text-green-400 text-xs font-mono uppercase tracking-wider py-2.5 rounded transition-all duration-200 border border-green-500/20"
+                      >
+                        Approve Payment
+                      </button>
+                      <button
+                        onClick={() => handlePaymentApproval(order.id, payment.id, false)}
+                        className="px-4 bg-red-500/10 hover:bg-red-500/30 text-red-400 text-xs rounded transition-all border border-red-500/20"
+                      >
+                        <LuX />
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      {next && (
+                        <button
+                          onClick={() => updateStatus(order.id, next)}
+                          className="flex-1 bg-white/10 hover:bg-accent-gold hover:text-black text-white text-xs font-mono uppercase tracking-wider py-2.5 rounded transition-all duration-200"
+                        >
+                          → {STATUS_CONFIG[next]?.label}
+                        </button>
+                      )}
+                      {order.status !== "cancelled" && order.status !== "completed" && (
+                        <button
+                          onClick={() => updateStatus(order.id, "cancelled")}
+                          className="px-3 bg-red-500/10 hover:bg-red-500/30 text-red-400 text-xs rounded transition-all"
+                        >
+                          <LuX />
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
