@@ -84,7 +84,12 @@ export default function AdminOrdersPage() {
 
   const formatTime = (iso) => {
     if (!iso) return "—";
-    const d = new Date(iso);
+    let safeIso = iso;
+    // If the backend returns a naive UTC string without timezone info, append 'Z'
+    if (!safeIso.endsWith("Z") && !safeIso.includes("+") && !safeIso.match(/-\d{2}:\d{2}$/)) {
+      safeIso += "Z";
+    }
+    const d = new Date(safeIso);
     return d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
   };
 
