@@ -7,6 +7,7 @@ import {
   LuLayoutDashboard,
   LuClipboardList,
   LuCoffee,
+  LuWarehouse,
   LuSettings,
   LuLogOut,
   LuMenu,
@@ -17,6 +18,7 @@ const menuItems = [
   { name: "Dashboard", path: "/admin/dashboard", icon: <LuLayoutDashboard /> },
   { name: "Orders", path: "/admin/orders", icon: <LuClipboardList /> },
   { name: "Menu", path: "/admin/menu", icon: <LuCoffee /> },
+  { name: "Inventory", path: "/admin/inventory", icon: <LuWarehouse /> },
   { name: "Settings", path: "/admin/settings", icon: <LuSettings /> },
 ];
 
