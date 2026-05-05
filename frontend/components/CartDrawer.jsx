@@ -26,6 +26,7 @@ export default function CartDrawer() {
   const [errorMessage, setErrorMessage] = useState("");
   const [selectedTable, setSelectedTable] = useState(null);
   const [customerName, setCustomerName] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("card");
   const [activeOrderDetails, setActiveOrderDetails] = useState(null);
   const router = useRouter();
 
@@ -276,6 +277,28 @@ export default function CartDrawer() {
               />
             </div>
 
+            {/* ── Payment Method ── */}
+            <div className="mt-4">
+              <label className="block text-[10px] text-white/40 uppercase tracking-[0.3em] mb-2">
+                Payment Method
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {["card", "cash"].map((method) => (
+                  <button
+                    key={method}
+                    onClick={() => setPaymentMethod(method)}
+                    className={`py-2 rounded text-xs font-sans uppercase tracking-widest transition-all duration-200 ${
+                      paymentMethod === method
+                        ? "bg-accent-gold text-black font-bold shadow-lg shadow-accent-gold/20"
+                        : "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white border border-white/10"
+                    }`}
+                  >
+                    {method}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Footer */}
             <div className="mt-4 pt-4 border-t border-accent-gold/20">
               <div className="flex justify-between items-end mb-4">
@@ -301,10 +324,10 @@ export default function CartDrawer() {
                 {status === "loading" ? (
                   <span className="inline-flex items-center gap-2">
                     <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                    Processing…
+                    Processing Payment…
                   </span>
                 ) : (
-                  `Confirm · Table ${selectedTable || "?"}`
+                  `Pay ₹${cartTotal} · Table ${selectedTable || "?"}`
                 )}
               </button>
             </div>
