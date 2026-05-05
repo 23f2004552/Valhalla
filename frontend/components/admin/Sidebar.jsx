@@ -8,6 +8,7 @@ import {
   LuClipboardList,
   LuCoffee,
   LuWarehouse,
+  LuCreditCard,
   LuSettings,
   LuLogOut,
   LuMenu,
@@ -19,6 +20,7 @@ const menuItems = [
   { name: "Orders", path: "/admin/orders", icon: <LuClipboardList /> },
   { name: "Menu", path: "/admin/menu", icon: <LuCoffee /> },
   { name: "Inventory", path: "/admin/inventory", icon: <LuWarehouse /> },
+  { name: "Payments", path: "/admin/payments", icon: <LuCreditCard /> },
   { name: "Settings", path: "/admin/settings", icon: <LuSettings /> },
 ];
 
