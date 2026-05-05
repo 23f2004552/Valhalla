@@ -20,9 +20,6 @@ export default function DashboardClient({ stats }) {
                         <span className="text-2xl md:text-4xl text-accent-gold mr-1 md:mr-2">₹</span>
                         {stats.revenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </span>
-                    <span className="flex items-center gap-1 text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded text-xs border border-emerald-500/20">
-                        ↑ 12%
-                    </span>
                 </div>
             </div>
 
