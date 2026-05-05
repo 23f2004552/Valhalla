@@ -92,6 +92,26 @@ export default function CartDrawer() {
       }
 
       const orderData = await res.json();
+
+      // Process Payment
+      const paymentRes = await fetch(`${API_URL}/payments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          order_id: orderData.id,
+          amount: cartTotal,
+        }),
+      });
+
+      if (!paymentRes.ok) {
+        throw new Error("Payment service unavailable.");
+      }
+
+      const paymentData = await paymentRes.json();
+      if (paymentData.status === "failed") {
+        throw new Error("Payment declined.");
+      }
+
       clearCart();
       setActiveOrderId(orderData.id);
       setStatus("idle");
