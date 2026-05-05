@@ -221,8 +221,9 @@ export default function CartDrawer() {
           )
         ) : (
           <>
-            {/* Items */}
-            <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+            <div className="flex-1 overflow-y-auto pr-2 pb-4 custom-scrollbar space-y-4">
+              {/* Items */}
+              <div className="space-y-4">
               {cartItems.map((item) => (
                 <div key={item.id} className="flex justify-between items-start group">
                   <div className="flex-1">
@@ -308,9 +309,10 @@ export default function CartDrawer() {
                 </div>
               </div>
             )}
+            </div>
 
             {/* Footer */}
-            <div className="mt-4 pt-4 border-t border-accent-gold/20">
+            <div className="pt-4 border-t border-accent-gold/20 shrink-0">
               <div className="flex justify-between items-end mb-4">
                 <div>
                   <span className="text-white/50 text-xs uppercase tracking-widest block">Total</span>
