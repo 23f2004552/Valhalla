@@ -103,13 +103,7 @@ Client Browser
 - Redis
 - RabbitMQ
 
-### DevOps & Monitoring
-- Docker
-- Docker Compose
-- Nginx
-- Prometheus
-- Grafana
-- Jaeger
+
 
 ---
 
